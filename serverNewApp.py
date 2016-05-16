@@ -8,21 +8,30 @@ global addr
 
 def connected(client1,client2):
     global conn,addr
+    terminate = False
     while True:
-        data = conn[client1].recv(1024)
-        conn[client2].sendall(data)
-        data = repr(data)
-        if data[2:len(data)-1] == 'end':
-            print('Client ',client1, ' ending the connection')
-            conn[client1].sendall(b'end')
-            break
-        data = conn[client2].recv(1024)
-        conn[client1].sendall(data)
-        data = repr(data)
-        if data[2:len(data)-1] == 'end':
-            print('Client ',client2,' Ending the connection')
-            conn[client2].sendall(b'end')
-            break
+        checkClient1 ,checkClient2 = True,True
+        while checkClient1:
+            data = conn[client1].recv(1024)
+            conn[client2].sendall(data)
+            data = repr(data)
+            if data[len(data)-2:len(data)-1] == '.':
+                checkClient1 = False
+            if data[2:len(data)-1] == 'end':
+                print('Client ',client1, ' ending the connection with Client ',client2)
+                terminate = True
+                break
+        while checkClient2 and terminate == False:
+            data = conn[client2].recv(1024)
+            conn[client1].sendall(data)
+            data = repr(data)
+            if data[len(data)-2:len(data)-1] == '.':
+                checkClient2 = False
+            if data[2:len(data)-1] == 'end':
+                print('Client ',client2,' Ending the connection with Client ',client1)
+                terminate = True
+                break
+        if terminate == True : break
     conn[client1].close()
     conn[client2].close()
 
@@ -49,11 +58,11 @@ if __name__ == '__main__':
 
     print('Socket successfully binded')
 
-    s.listen(4)
+    s.listen(6)
     print('Socket listening')
     i = 0;tCount = 0
     while True:
-        if i == 6 : break
+        if i == 2 : break
         tempConn,tempAddr = s.accept()
         conn.append(tempConn)
         addr.append(tempAddr)
